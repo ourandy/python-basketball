@@ -1,5 +1,5 @@
 numpy==1.19.0
 scipy==1.4.1
-Flask==0.12.2
+Flask==1.0
 markdown==2.6.11
 flask-restful==0.3.6
