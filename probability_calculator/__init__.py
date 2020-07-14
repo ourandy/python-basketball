@@ -12,7 +12,7 @@ class WinProbability(Resource):
     @staticmethod
     def calculate_probability(spread):
 
-        STD_DEV = 12.0
+        STD_DEV = 11.7082
         favourite_win = stats.norm.sf(0.5,spread,STD_DEV)
         outsider_win = 1 - favourite_win
 
@@ -28,9 +28,9 @@ class WinProbability(Resource):
         return{'message': 'POST really was excellent', 'favouriteProbability': result[0],
                'outsiderProbability': result[1]}, HTTPStatus.OK
 
-class MinimizeEndPoint(Resource):
+class Minimize(Resource):
 
-    def solve(self, spread, expected, stddev):
+    def solve(self, spread, expected, std_dev):
         spread = np.array(spread)
         expected = np.array(expected)
 
@@ -38,7 +38,7 @@ class MinimizeEndPoint(Resource):
             estimated = stats.norm.sf(0.5, spread, scale=s)
             mse = np.sum(np.power((estimated - expected), 2)) / spread.size
             return mse
-        optimal_solution = optimize.minimize(mse, stddev)
+        optimal_solution = optimize.minimize(mse, std_dev, method='BFGS')
         print(optimal_solution)
 
         return optimal_solution
@@ -50,16 +50,17 @@ class MinimizeEndPoint(Resource):
                             type=float, required=True)
         parser.add_argument('expected', action='append',
                             type=float, required=True)
-        parser.add_argument('stddev', type=float, required=True)
+        parser.add_argument('std_dev', type=float, required=True)
         args = parser.parse_args()
         res = self.solve(**args)
         print(res)
 
         return {
             "optimum": res.x[0],
-            "fun": res.fun
+            "fun": res.fun,
+            "message": res.message
         }, HTTPStatus.OK
 
 
-api.add_resource(MinimizeEndPoint, '/minimize')
+api.add_resource(Minimize, '/minimize')
 api.add_resource(WinProbability, '/winprobability')
